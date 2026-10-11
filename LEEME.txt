@@ -1,0 +1,40 @@
+MIS FINANZAS: DEUDAS DESPLEGABLES Y MOVIMIENTOS OPCIONALES
+
+1. En la aplicación anterior, descarga una copia de seguridad.
+2. Extrae este ZIP. Reemplaza index.html, estilos.css y app.js en tu carpeta de trabajo.
+3. Abre index.html y comprueba el diseño. Si cambiaste de carpeta, importa tu copia para recuperar los movimientos locales.
+4. Sube los tres archivos a la raíz del MISMO repositorio de GitHub, reemplazando los anteriores. No subas este ZIP ni copias .json con datos.
+5. Espera a que termine la publicación y recarga la misma dirección web en tu iPhone. No borres los datos del sitio.
+
+CAMBIOS
+- Ingreso y Gasto se eligen mediante botones, también al editar.
+- Deudas empieza cerrado: pulsa su encabezado para desplegarlo.
+- Tipo Prestar / Yo debo, persona, concepto y valor pendiente.
+- Toca una deuda: se desenfoca y aparecen Editar, Marcar saldada, Eliminar y Cancelar.
+- Los totales de deudas solo incluyen las pendientes.
+- Marcar saldada indica pago TOTAL. Una deuda saldada no se puede saldar de nuevo. No hay abonos parciales.
+- Al crear Prestar: pregunta si deseas añadir un GASTO.
+- Al crear Yo debo: pregunta si deseas añadir un INGRESO.
+- Al saldar Prestar: pregunta si deseas añadir un INGRESO.
+- Al saldar Yo debo: pregunta si deseas añadir un GASTO.
+- Responder "Sí" guarda la deuda o su pago junto con el movimiento. Responder "No" actualiza solo la deuda.
+- Cancelar operación o Escape no guarda cambios.
+- Editar o eliminar una deuda no cambia movimientos ya registrados; estos se corrigen desde Mis movimientos.
+- Solo los movimientos afectan el saldo. Los ingresos/gastos opcionales representan entradas y salidas de dinero.
+- Eliminar borra directamente, sin confirmación.
+- Conserva el estilo de cristal, la selección borrosa del historial y el botón de copia debajo del historial a la izquierda.
+
+DATOS Y COPIAS
+- Usa la misma clave de almacenamiento que tu primera aplicación y admite los movimientos existentes.
+- Las nuevas copias (versión 2) incluyen movimientos y deudas.
+- Al recuperar una copia antigua (versión 1), reemplaza movimientos pero conserva deudas actuales.
+- Cada navegador y dispositivo guarda datos independientes; no hay sincronización automática.
+- Conserva tus copias en privado: contienen datos sin cifrar.
+- El formato nuevo requiere estos archivos; si vuelves a la versión anterior, utiliza también una copia antigua de tus datos.
+
+PRUEBA RÁPIDA
+Registra Prestar: Ana, 50000, y responde Sí. Por cobrar será 50000 y se añadirá un gasto de 50000.
+Salda esa deuda y responde Sí: Por cobrar será 0 y se añadirá un ingreso de 50000.
+Registra Yo debo: Luis, 20000, y responde No. Yo debo será 20000 y no se añadirá un ingreso.
+Salda esa deuda y responde No: Yo debo será 0 y no se añadirá un gasto.
+Descarga una copia, añade una deuda de prueba y restaura la copia para comprobar que la deuda de prueba desaparece.

@@ -1,422 +1,95 @@
-/* ===== COLORES Y AJUSTES GENERALES ===== */
+:root{color-scheme:light;--texto:#173c49;--secundario:#466572;--verde:#08674d;--rojo:#a1273a;--borde:rgba(255,255,255,.85);--sombra:0 12px 32px rgba(35,77,99,.12)}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+body{margin:0;min-height:100vh;color:var(--texto);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:#deedf3}
+body::before{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;background:radial-gradient(ellipse at 8% 12%,rgba(104,223,211,.65),transparent 48%),radial-gradient(ellipse at 95% 35%,rgba(174,160,242,.5),transparent 50%),radial-gradient(ellipse at 40% 95%,rgba(153,205,255,.65),transparent 48%),linear-gradient(135deg,#e5f4f1,#e9edf9)}
+main{max-width:840px;margin:auto;padding:36px 20px;padding-bottom:calc(32px + env(safe-area-inset-bottom))}
+header{margin-bottom:28px}h1{margin:0 0 8px;font-size:clamp(30px,5vw,42px);font-weight:750;letter-spacing:-1.4px}h2{margin:0 0 18px;font-size:18px;font-weight:650}
+header p,.ayuda{color:var(--secundario);line-height:1.5}.eyebrow{font-size:11px;font-weight:700;letter-spacing:2px}
+.cabecera-app{display:flex;align-items:center;gap:20px;flex-wrap:wrap}
+.logotipo-app{display:block;width:160px;max-width:100%;height:auto;flex-shrink:0;object-fit:contain}
+.presentacion-app{flex:1 1 220px;min-width:0}
+@media(max-width:540px){.cabecera-app{gap:8px 16px}.logotipo-app{width:112px}.presentacion-app{flex-basis:180px}}
+.resumen article,.panel,.opciones-copia,#editor-movimiento{background:rgba(248,252,255,.94);border:1px solid var(--borde);box-shadow:var(--sombra),inset 0 1px 0 rgba(255,255,255,.95),inset 0 -1px 0 rgba(255,255,255,.35)}
+@supports ((backdrop-filter:blur(20px)) or (-webkit-backdrop-filter:blur(20px))){.resumen article,.panel,.opciones-copia,#editor-movimiento{background:linear-gradient(135deg,rgba(255,255,255,.72),rgba(255,255,255,.4));-webkit-backdrop-filter:blur(24px) saturate(145%);backdrop-filter:blur(24px) saturate(145%)}}
+.resumen{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}.resumen article{padding:22px;border-radius:24px}.resumen h2{margin-bottom:12px;color:var(--secundario);font-size:14px}.resumen article p{margin:0;font-size:clamp(22px,3vw,30px);font-weight:750;letter-spacing:-.8px;overflow-wrap:anywhere}
+#total-ingresos,.ingreso,#total-me-deben{color:var(--verde)}#total-gastos,.gasto,#total-yo-debo{color:var(--rojo)}
+.panel{margin-top:20px;padding:26px;border-radius:28px}form{display:grid;gap:10px}label,legend{margin-top:8px;color:var(--secundario);font-size:14px;font-weight:600}
+input,button{font:inherit;font-size:16px}input:not([type=radio]){width:100%;min-width:0;min-height:48px;padding:13px 16px;color:var(--texto);background:rgba(255,255,255,.62);border:1px solid rgba(87,121,143,.28);border-radius:16px;box-shadow:inset 0 2px 5px rgba(41,77,99,.04)}input::placeholder{color:#587180}
+input:focus{outline:3px solid rgba(18,113,139,.25);border-color:#287d90;background:rgba(255,255,255,.85)}
+button{width:100%;min-height:46px;margin-top:12px;padding:13px 18px;color:white;font-weight:600;background:linear-gradient(135deg,#217c80,#155f76);border:1px solid rgba(255,255,255,.55);border-radius:16px;box-shadow:0 5px 12px rgba(22,83,107,.15),inset 0 1px 0 rgba(255,255,255,.35);cursor:pointer;transition:transform .15s ease,box-shadow .15s ease}
+button:active{transform:scale(.98)}button:focus-visible{outline:3px solid #247b99;outline-offset:3px}
+@media(hover:hover){button:hover{box-shadow:0 7px 18px rgba(22,83,107,.23),inset 0 1px 0 rgba(255,255,255,.55)}}
+/* Botones de selección: controles de radio accesibles. */
+.selector-tipo{border:0;margin:0;padding:0;display:grid;grid-template-columns:1fr 1fr;gap:8px;min-width:0}.selector-tipo legend{padding:0;margin-bottom:10px}.selector-tipo label{position:relative;display:block;margin:0;cursor:pointer}.selector-tipo input{position:absolute;width:1px;height:1px;opacity:0}.selector-tipo span{display:flex;align-items:center;justify-content:center;min-height:48px;padding:12px 8px;border-radius:15px;background:rgba(255,255,255,.5);border:1px solid rgba(78,113,135,.22);color:var(--texto);transition:background .15s ease}
+.selector-tipo input:checked + span{background:linear-gradient(135deg,#217c80,#155f76);color:white;border-color:transparent;box-shadow:0 4px 12px rgba(22,83,107,.18),inset 0 1px 0 rgba(255,255,255,.4)}.selector-tipo input:focus-visible + span{outline:3px solid #247b99;outline-offset:3px}
+ul{margin:0;padding:0;list-style:none}#lista-movimientos .movimiento{display:block;padding:10px 0;border-bottom:1px solid rgba(65,101,125,.15)}#lista-movimientos .movimiento:last-child{border-bottom:none}
+.contenido-movimiento{display:flex;justify-content:space-between;align-items:center;gap:16px;margin:0;padding:14px;color:var(--texto);text-align:left;font-weight:500;background:rgba(255,255,255,.35);border:1px solid rgba(255,255,255,.65);box-shadow:none;transition:filter .15s ease}.contenido-movimiento span{min-width:0;overflow-wrap:anywhere}.contenido-movimiento strong{flex-shrink:0}.movimiento.seleccionado .contenido-movimiento{filter:blur(3px)}
+.acciones-movimiento,.acciones-deuda{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}.acciones-movimiento button,.acciones-deuda button{flex:1 1 85px;width:auto;margin:0;padding:10px;font-size:14px}button.boton-eliminar{color:#8e2033;background:linear-gradient(135deg,rgba(255,231,235,.95),rgba(255,211,220,.85))}button.boton-cancelar{color:var(--texto);background:rgba(255,255,255,.72)}
+.menu-copia{position:static;display:flex;flex-direction:column;align-items:flex-start;gap:10px;margin-top:18px}#abrir-menu-copia{position:static;width:50px;height:50px;margin:0;padding:0;font-size:24px;border-radius:17px;background:rgba(255,255,255,.72);color:var(--texto)}.opciones-copia{position:static;width:210px;max-width:100%;padding:8px;border-radius:20px}.opciones-copia button{margin:0;color:var(--texto);text-align:left;background:transparent;border:none;box-shadow:none}
+#editor-movimiento{width:min(420px,calc(100% - 32px));max-height:85vh;overflow-y:auto;padding:26px;color:var(--texto);border-radius:28px}#editor-movimiento::backdrop{background:rgba(20,44,66,.35)}
+.resumen-deudas{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:18px 0 22px}.resumen-deudas article{min-width:0;padding:16px;background:rgba(255,255,255,.45);border:1px solid var(--borde);border-radius:18px}.resumen-deudas h3{margin:0 0 8px;font-size:13px;color:var(--secundario)}.resumen-deudas strong{font-size:23px;overflow-wrap:anywhere}.subtitulo{font-size:16px;margin:28px 0 12px}.deuda{padding:16px 0;border-bottom:1px solid rgba(65,101,125,.15)}.deuda:last-child{border:0}.cabecera-deuda{display:flex;flex-wrap:wrap;justify-content:space-between;gap:8px}.cabecera-deuda strong{overflow-wrap:anywhere}.detalle-deuda{margin:8px 0;color:var(--secundario);font-size:14px;overflow-wrap:anywhere}.etiqueta{display:inline-block;border-radius:8px;padding:4px 8px;background:rgba(255,255,255,.65);font-size:12px}.aviso{padding:14px;border:1px solid #fff;background:#fff4d9;color:#654916;border-radius:14px;line-height:1.5}
+@media(max-width:540px){main{padding-top:26px;padding-left:16px;padding-right:16px}.resumen{grid-template-columns:1fr;gap:10px}.resumen article{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:18px 20px;border-radius:22px}.resumen h2{margin:0}.resumen article p{min-width:0;text-align:right;font-size:25px}.panel{padding:20px;border-radius:24px}.contenido-movimiento{flex-wrap:wrap}.resumen-deudas strong{font-size:20px}}
+@media(prefers-reduced-motion:reduce){button,.contenido-movimiento,.selector-tipo span{transition:none}button:active{transform:none}}
 
-:root {
-  color-scheme: light;
-  --texto: #173c49;
-  --secundario: #466572;
-  --verde: #08674d;
-  --rojo: #a1273a;
-  --borde: rgba(255, 255, 255, 0.85);
-  --sombra: 0 12px 32px rgba(35, 77, 99, 0.12);
+/* Deudas plegables: solo el encabezado se ve al iniciar. */
+.seccion-deudas > summary {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 16px; min-height: 46px; list-style: none; cursor: pointer;
+  font-size: 18px; font-weight: 650;
 }
-
-* {
-  box-sizing: border-box;
+.seccion-deudas > summary::-webkit-details-marker { display: none; }
+.seccion-deudas > summary:focus-visible {
+  outline: 3px solid #247b99; outline-offset: 6px; border-radius: 8px;
 }
-
-[hidden] {
-  display: none !important;
+.flecha-deudas { font-size: 24px; transition: transform .18s ease; }
+.seccion-deudas[open] .flecha-deudas { transform: rotate(180deg); }
+.contenido-deudas { padding-top: 6px; }
+.contenido-deuda {
+  display: block; margin: 0; padding: 14px; color: var(--texto);
+  text-align: left; font-weight: 500; background: rgba(255,255,255,.35);
+  border: 1px solid rgba(255,255,255,.65); box-shadow: none; transition: filter .15s ease;
 }
-
-body {
-  margin: 0;
-  min-height: 100vh;
-  color: var(--texto);
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI",
-    sans-serif;
-  background: #deedf3;
+.contenido-deuda .detalle-deuda { display: block; }
+.deuda.seleccionado .contenido-deuda { filter: blur(3px); }
+.acciones-deuda { display: grid; grid-template-columns: 1fr 1fr; }
+.acciones-deuda button { width: 100%; }
+button:disabled { opacity: .55; cursor: default; transform: none; box-shadow: none; }
+#editor-deuda, #pregunta-deuda {
+  width: min(440px, calc(100% - 32px)); max-height: 85vh; overflow-y: auto;
+  padding: 26px; color: var(--texto); background: rgba(248,252,255,.97);
+  border: 1px solid var(--borde); border-radius: 28px;
+  box-shadow: var(--sombra), inset 0 1px 0 rgba(255,255,255,.95);
 }
-
-/* Fondo con luces suaves */
-body::before {
-  content: "";
-  position: fixed;
-  inset: 0;
-  z-index: -1;
-  pointer-events: none;
-  background:
-    radial-gradient(
-      ellipse at 8% 12%,
-      rgba(104, 223, 211, 0.65),
-      transparent 48%
-    ),
-    radial-gradient(
-      ellipse at 95% 35%,
-      rgba(174, 160, 242, 0.5),
-      transparent 50%
-    ),
-    radial-gradient(
-      ellipse at 40% 95%,
-      rgba(153, 205, 255, 0.65),
-      transparent 48%
-    ),
-    linear-gradient(135deg, #e5f4f1, #e9edf9);
-}
-
-main {
-  max-width: 840px;
-  margin: auto;
-  padding: 36px 20px;
-  padding-bottom: calc(32px + env(safe-area-inset-bottom));
-}
-
-header {
-  margin-bottom: 28px;
-}
-
-h1 {
-  margin: 0 0 8px;
-  font-size: clamp(30px, 5vw, 42px);
-  font-weight: 750;
-  letter-spacing: -1.4px;
-}
-
-h2 {
-  margin: 0 0 18px;
-  font-size: 18px;
-  font-weight: 650;
-}
-
-header p,
-#sin-movimientos {
-  color: var(--secundario);
-  line-height: 1.5;
-}
-
-/* ===== SUPERFICIES DE CRISTAL ===== */
-
-/* Fondo de respaldo si el navegador no admite desenfoque */
-.resumen article,
-.panel,
-.opciones-copia,
-#editor-movimiento {
-  background: rgba(248, 252, 255, 0.94);
-  border: 1px solid var(--borde);
-  box-shadow:
-    var(--sombra),
-    inset 0 1px 0 rgba(255, 255, 255, 0.95),
-    inset 0 -1px 0 rgba(255, 255, 255, 0.35);
-}
-
-@supports (
-  (backdrop-filter: blur(20px)) or
-  (-webkit-backdrop-filter: blur(20px))
-) {
-  .resumen article,
-  .panel,
-  .opciones-copia,
-  #editor-movimiento {
-    background: linear-gradient(
-      135deg,
-      rgba(255, 255, 255, 0.72),
-      rgba(255, 255, 255, 0.4)
-    );
+@supports ((backdrop-filter:blur(20px)) or (-webkit-backdrop-filter:blur(20px))) {
+  #editor-deuda, #pregunta-deuda {
+    background: linear-gradient(135deg,rgba(255,255,255,.93),rgba(255,255,255,.8));
     -webkit-backdrop-filter: blur(24px) saturate(145%);
     backdrop-filter: blur(24px) saturate(145%);
   }
 }
+#editor-deuda::backdrop, #pregunta-deuda::backdrop { background: rgba(20,44,66,.4); }
+#titulo-pregunta-deuda { font-size: 23px; line-height: 1.3; }
+.respuestas-deuda { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+button.boton-texto { background: transparent; border: none; color: var(--secundario); box-shadow: none; }
+@media(max-width:380px) { .respuestas-deuda { grid-template-columns: 1fr; gap: 0; } }
+@media(prefers-reduced-motion:reduce) { .flecha-deudas, .contenido-deuda { transition: none; } }
 
-/* ===== RESUMEN ===== */
-
-.resumen {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 14px;
-}
-
-.resumen article {
-  padding: 22px;
-  border-radius: 24px;
-}
-
-.resumen h2 {
-  margin-bottom: 12px;
-  color: var(--secundario);
-  font-size: 14px;
-}
-
-.resumen article p {
-  margin: 0;
-  font-size: clamp(22px, 3vw, 30px);
-  font-weight: 750;
-  letter-spacing: -0.8px;
-  overflow-wrap: anywhere;
-}
-
-#total-ingresos,
-.ingreso {
-  color: var(--verde);
-}
-
-#total-gastos,
-.gasto {
-  color: var(--rojo);
-}
-
-/* ===== FORMULARIO ===== */
-
-.panel {
-  margin-top: 20px;
-  padding: 26px;
-  border-radius: 28px;
-}
-
-form {
-  display: grid;
-  gap: 10px;
-}
-
-label {
-  margin-top: 8px;
-  color: var(--secundario);
-  font-size: 14px;
-  font-weight: 600;
-}
-
-input,
-select,
-button {
-  font: inherit;
-  font-size: 16px;
-}
-
-input,
-select {
-  width: 100%;
-  min-width: 0;
-  min-height: 48px;
-  padding: 13px 16px;
-  color: var(--texto);
-  background: rgba(255, 255, 255, 0.62);
-  border: 1px solid rgba(87, 121, 143, 0.28);
-  border-radius: 16px;
-  box-shadow: inset 0 2px 5px rgba(41, 77, 99, 0.04);
-}
-
-input::placeholder {
-  color: #587180;
-}
-
-input:focus,
-select:focus {
-  outline: 3px solid rgba(18, 113, 139, 0.25);
-  border-color: #287d90;
-  background: rgba(255, 255, 255, 0.85);
-}
-
-/* ===== BOTONES ===== */
-
-button {
-  width: 100%;
-  min-height: 46px;
-  margin-top: 12px;
-  padding: 13px 18px;
-  color: white;
-  font-weight: 600;
-  background: linear-gradient(135deg, #217c80, #155f76);
-  border: 1px solid rgba(255, 255, 255, 0.55);
-  border-radius: 16px;
-  box-shadow:
-    0 5px 12px rgba(22, 83, 107, 0.15),
-    inset 0 1px 0 rgba(255, 255, 255, 0.35);
-  cursor: pointer;
-  transition: transform 0.15s ease, box-shadow 0.15s ease;
-}
-
-button:active {
-  transform: scale(0.98);
-}
-
-button:focus-visible {
-  outline: 3px solid #247b99;
-  outline-offset: 3px;
-}
-
-@media (hover: hover) {
-  button:hover {
-    box-shadow:
-      0 7px 18px rgba(22, 83, 107, 0.23),
-      inset 0 1px 0 rgba(255, 255, 255, 0.55);
-  }
-}
-
-/* ===== HISTORIAL ===== */
-
-#lista-movimientos {
-  margin: 0;
-  padding: 0;
-  list-style: none;
-}
-
-#lista-movimientos .movimiento {
-  display: block;
-  padding: 10px 0;
-  border-bottom: 1px solid rgba(65, 101, 125, 0.15);
-}
-
-#lista-movimientos .movimiento:last-child {
-  border-bottom: none;
-}
-
-.contenido-movimiento {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 16px;
-  margin: 0;
-  padding: 14px;
-  color: var(--texto);
-  text-align: left;
-  font-weight: 500;
-  background: rgba(255, 255, 255, 0.35);
-  border: 1px solid rgba(255, 255, 255, 0.65);
-  box-shadow: none;
-  transition: filter 0.15s ease;
-}
-
-.contenido-movimiento span {
-  min-width: 0;
-  overflow-wrap: anywhere;
-}
-
-.contenido-movimiento strong {
-  flex-shrink: 0;
-}
-
-.movimiento.seleccionado .contenido-movimiento {
-  filter: blur(3px);
-}
-
-.acciones-movimiento {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  margin-top: 10px;
-}
-
-.acciones-movimiento button {
-  flex: 1 1 85px;
-  width: auto;
-  margin: 0;
-  padding: 10px;
-  font-size: 14px;
-}
-
-button.boton-eliminar {
-  color: #8e2033;
-  background: linear-gradient(
-    135deg,
-    rgba(255, 231, 235, 0.95),
-    rgba(255, 211, 220, 0.85)
-  );
-}
-
-button.boton-cancelar {
-  color: var(--texto);
-  background: rgba(255, 255, 255, 0.72);
-}
-
-/* ===== COPIAS: ABAJO, A LA IZQUIERDA ===== */
-
-.menu-copia {
-  position: static;
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 10px;
-  margin-top: 18px;
-}
-
-#abrir-menu-copia {
-  position: static;
-  width: 50px;
-  height: 50px;
-  margin: 0;
-  padding: 0;
-  font-size: 24px;
-  border-radius: 17px;
-  background: rgba(255, 255, 255, 0.72);
-  color: var(--texto);
-}
-
-.opciones-copia {
-  position: static;
-  width: 210px;
-  max-width: 100%;
-  padding: 8px;
-  border-radius: 20px;
-}
-
-.opciones-copia button {
-  margin: 0;
-  color: var(--texto);
-  text-align: left;
-  background: transparent;
-  border: none;
-  box-shadow: none;
-}
-
-/* ===== VENTANA DE EDICIÓN ===== */
-
-#editor-movimiento {
-  width: min(420px, calc(100% - 32px));
-  max-height: 85vh;
-  overflow-y: auto;
-  padding: 26px;
-  color: var(--texto);
-  border-radius: 28px;
-}
-
-#editor-movimiento::backdrop {
-  background: rgba(20, 44, 66, 0.35);
-}
-
-/* ===== ADAPTACIÓN AL IPHONE ===== */
-
-@media (max-width: 540px) {
-  main {
-    padding-top: 26px;
-    padding-left: 16px;
-    padding-right: 16px;
-  }
-
-  .resumen {
-    grid-template-columns: 1fr;
-    gap: 10px;
-  }
-
-  .resumen article {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 12px;
-    padding: 18px 20px;
-    border-radius: 22px;
-  }
-
-  .resumen h2 {
-    margin: 0;
-  }
-
-  .resumen article p {
-    min-width: 0;
-    text-align: right;
-    font-size: 25px;
-  }
-
-  .panel {
-    padding: 20px;
-    border-radius: 24px;
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  button,
-  .contenido-movimiento {
-    transition: none;
-  }
-
-  button:active {
-    transform: none;
-  }
+/* Mantiene los importes dentro del cristal incluso con texto ampliado. */
+.detalle-movimiento { display: grid; gap: 5px; }
+.fecha-movimiento { color: var(--secundario); font-size: 13px; font-weight: 400; line-height: 1.4; }
+.controles-historial { display: flex; align-items: center; flex-wrap: wrap; gap: 10px; margin-bottom: 12px; }
+.controles-historial label { margin: 0; }
+.controles-historial select { min-height: 46px; padding: 10px 14px; font: inherit; color: var(--texto); background: rgba(255,255,255,.62); border: 1px solid rgba(87,121,143,.28); border-radius: 14px; }
+.controles-historial select:focus-visible { outline: 3px solid #247b99; outline-offset: 3px; }
+.paginacion-movimientos { margin-top: 18px; }
+.paginacion-movimientos p { font-size: 14px; overflow-wrap: anywhere; }
+.botones-paginacion { display: flex; flex-wrap: wrap; gap: 10px; }
+.botones-paginacion button { flex: 1 1 110px; width: auto; margin: 0; }
+.contenido-movimiento strong { min-width: 0; max-width: 100%; overflow-wrap: anywhere; }
+.cabecera-deuda strong { min-width: 0; max-width: 100%; }
+.resumen-deudas { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+dialog .aviso { overflow-wrap: anywhere; }
+@media(max-width:380px) {
+  .acciones-deuda { grid-template-columns: 1fr; }
 }

@@ -3,141 +3,118 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#dcefeb">
   <title>Mis finanzas</title>
   <link rel="stylesheet" href="estilos.css">
   <script src="app.js" defer></script>
 </head>
-
+<body>
+<main>
+  <header class="cabecera-app">
+    <img class="logotipo-app" src="logotipo.png" alt="CashCode" width="1254" height="1254">
+    <div class="presentacion-app"><p class="eyebrow">MI ESPACIO PERSONAL</p><h1>Mis finanzas</h1><p>Un lugar para organizar mi dinero.</p></div>
+  </header>
+  <p id="aviso" class="aviso" role="status" hidden></p>
+  <section class="resumen" aria-label="Resumen de movimientos">
+    <article><h2>Ingresos</h2><p id="total-ingresos">$0</p></article>
+    <article><h2>Gastos</h2><p id="total-gastos">$0</p></article>
+    <article><h2>Saldo</h2><p id="saldo">$0</p></article>
+  </section>
+  <section class="panel">
+    <h2>Nuevo movimiento</h2>
+    <form id="formulario">
+      <fieldset class="selector-tipo"><legend>Tipo de movimiento</legend>
+        <label><input type="radio" name="tipo" value="ingreso"><span>＋ Ingreso</span></label>
+        <label><input type="radio" name="tipo" value="gasto" checked><span>− Gasto</span></label>
+      </fieldset>
+      <label for="descripcion">Descripción</label><input id="descripcion" type="text" maxlength="100" placeholder="Ejemplo: mercado o sueldo" required>
+      <label for="valor">Valor en pesos colombianos</label><input id="valor" type="number" min="1" max="1000000000000" step="1" inputmode="numeric" placeholder="Ejemplo: 25000" required>
+      <button type="submit">Agregar movimiento</button>
+    </form>
+  </section>
+  <details class="panel seccion-deudas" id="seccion-deudas">
+    <summary><span>Deudas</span><span class="flecha-deudas" aria-hidden="true">⌄</span></summary>
+    <div class="contenido-deudas">
+    <p class="ayuda">Registra un préstamo y elige si quieres añadir su movimiento de dinero.</p>
+    <div class="resumen-deudas">
+      <article><h3>Por cobrar</h3><strong id="total-me-deben">$0</strong></article>
+      <article><h3>Yo debo</h3><strong id="total-yo-debo">$0</strong></article>
+    </div>
+    <form id="formulario-deuda">
+      <fieldset class="selector-tipo"><legend>Tipo</legend>
+        <label><input type="radio" name="sentido" value="me_deben" checked><span>Prestar</span></label>
+        <label><input type="radio" name="sentido" value="debo"><span>Yo debo</span></label>
+      </fieldset>
+      <label for="persona-deuda">Nombre de la persona</label><input id="persona-deuda" type="text" maxlength="100" placeholder="Ejemplo: Laura" required>
+      <label for="concepto-deuda">Concepto (opcional)</label><input id="concepto-deuda" type="text" maxlength="150" placeholder="Ejemplo: préstamo para el mercado">
+      <label for="valor-deuda">Valor pendiente en pesos</label><input id="valor-deuda" type="number" min="1" max="1000000000000" step="1" inputmode="numeric" placeholder="Ejemplo: 50000" required>
+      <button type="submit">Agregar deuda</button>
+    </form>
+    <h3 class="subtitulo">Mis deudas</h3><p id="sin-deudas" class="ayuda">Todavía no has registrado deudas.</p><ul id="lista-deudas"></ul>
+    </div>
+  </details>
+  <section class="panel">
+    <h2>Mis movimientos</h2>
+    <div class="controles-historial">
+      <label for="cantidad-movimientos">Transacciones por página</label>
+      <select id="cantidad-movimientos" aria-controls="lista-movimientos">
+        <option value="10">10</option><option value="25">25</option><option value="50">50</option>
+      </select>
+    </div>
+    <p id="sin-movimientos" class="ayuda">Todavía no has registrado movimientos.</p>
+    <ul id="lista-movimientos"></ul>
+    <nav id="paginacion-movimientos" class="paginacion-movimientos" aria-label="Páginas del historial" hidden>
+      <p id="estado-pagina" class="ayuda" role="status" aria-atomic="true"></p>
+      <div class="botones-paginacion">
+        <button id="pagina-anterior" type="button" class="boton-cancelar" aria-controls="lista-movimientos">Anterior</button>
+        <button id="pagina-siguiente" type="button" class="boton-cancelar" aria-controls="lista-movimientos">Siguiente</button>
+      </div>
+    </nav>
+  </section>
+  <section class="menu-copia">
+    <button id="abrir-menu-copia" type="button" aria-label="Opciones de copia de seguridad" aria-expanded="false" aria-controls="opciones-copia" title="Copia de seguridad"><span aria-hidden="true">💾</span></button>
+    <div id="opciones-copia" class="opciones-copia" hidden><button id="exportar" type="button">Guardar copia</button><button id="importar" type="button">Restaurar copia</button></div>
+    <input id="archivo-copia" type="file" accept=".json,application/json" hidden>
+  </section>
+</main>
 <dialog id="editor-movimiento" aria-labelledby="titulo-editor">
   <h2 id="titulo-editor">Editar movimiento</h2>
-
+  <p id="error-editar-movimiento" class="aviso" role="alert" hidden></p>
   <form id="formulario-editar">
-    <label for="editar-tipo">Tipo</label>
-    <select id="editar-tipo">
-      <option value="gasto">Gasto</option>
-      <option value="ingreso">Ingreso</option>
-    </select>
-
-    <label for="editar-descripcion">Descripción</label>
-    <input
-      id="editar-descripcion"
-      type="text"
-      maxlength="100"
-      required
-    >
-
-    <label for="editar-valor">Valor en pesos colombianos</label>
-    <input
-      id="editar-valor"
-      type="number"
-      min="1"
-      max="1000000000000"
-      step="1"
-      inputmode="numeric"
-      required
-    >
-
-    <button type="submit">Guardar cambios</button>
-
-    <button id="cancelar-edicion" class="boton-cancelar" type="button">
-      Cancelar
-    </button>
+    <fieldset class="selector-tipo"><legend>Tipo de movimiento</legend>
+      <label><input type="radio" name="tipo" value="ingreso"><span>＋ Ingreso</span></label>
+      <label><input type="radio" name="tipo" value="gasto"><span>− Gasto</span></label>
+    </fieldset>
+    <label for="editar-descripcion">Descripción</label><input id="editar-descripcion" type="text" maxlength="100" required>
+    <label for="editar-valor">Valor en pesos</label><input id="editar-valor" type="number" min="1" max="1000000000000" step="1" inputmode="numeric" required>
+    <button type="submit">Guardar cambios</button><button id="cancelar-edicion" class="boton-cancelar" type="button">Cancelar</button>
   </form>
 </dialog>
-
-<body>
-  <main>
-    <header>
-      <h1>Mis finanzas</h1>
-      <p>Un lugar para organizar mi dinero.</p>
-    </header>
-
-    <section class="resumen" aria-label="Resumen financiero">
-      <article>
-        <h2>Ingresos</h2>
-        <p id="total-ingresos">$0</p>
-      </article>
-
-      <article>
-        <h2>Gastos</h2>
-        <p id="total-gastos">$0</p>
-      </article>
-
-      <article>
-        <h2>Saldo</h2>
-        <p id="saldo">$0</p>
-      </article>
-    </section>
-
-    <section class="panel">
-      <h2>Nuevo movimiento</h2>
-
-      <form id="formulario">
-        <label for="tipo">Tipo de movimiento</label>
-        <select id="tipo">
-          <option value="gasto">Gasto</option>
-          <option value="ingreso">Ingreso</option>
-        </select>
-
-        <label for="descripcion">Descripción</label>
-        <input
-          id="descripcion"
-          type="text"
-          placeholder="Ejemplo: mercado o sueldo"
-          maxlength="100"
-          required
-        >
-
-        <label for="valor">Valor en pesos colombianos</label>
-        <input
-          id="valor"
-          type="number"
-          placeholder="Ejemplo: 25000"
-          min="1"
-          max="1000000000000"
-          step="1"
-          inputmode="numeric"
-          required
-        >
-
-        <button type="submit">Agregar movimiento</button>
-      </form>
-    </section>
-
-    <section class="panel">
-      <h2>Mis movimientos</h2>
-      <p id="sin-movimientos">Todavía no has registrado movimientos.</p>
-      <ul id="lista-movimientos"></ul>
-    </section>
-    <section class="menu-copia">
-  <button
-    id="abrir-menu-copia"
-    type="button"
-    aria-label="Opciones de copia de seguridad"
-    aria-expanded="false"
-    aria-controls="opciones-copia"
-    title="Copia de seguridad"
-  >
-    <span aria-hidden="true">💾</span>
-  </button>
-
-  <div id="opciones-copia" class="opciones-copia" hidden>
-    <button id="exportar" type="button">
-      Guardar copia
-    </button>
-
-    <button id="importar" type="button">
-      Restaurar copia
-    </button>
+<dialog id="editor-deuda" aria-labelledby="titulo-editor-deuda">
+  <h2 id="titulo-editor-deuda">Editar deuda</h2>
+  <p class="ayuda">Los cambios se aplican a esta deuda. Los movimientos de dinero ya registrados se editan desde el historial.</p>
+  <p id="error-editar-deuda" class="aviso" role="alert" hidden></p>
+  <form id="formulario-editar-deuda">
+    <fieldset class="selector-tipo"><legend>Tipo</legend>
+      <label><input type="radio" name="sentido" value="me_deben"><span>Prestar</span></label>
+      <label><input type="radio" name="sentido" value="debo"><span>Yo debo</span></label>
+    </fieldset>
+    <label for="editar-persona-deuda">Nombre de la persona</label><input id="editar-persona-deuda" type="text" maxlength="100" required>
+    <label for="editar-concepto-deuda">Concepto (opcional)</label><input id="editar-concepto-deuda" type="text" maxlength="150">
+    <label for="editar-valor-deuda">Valor en pesos</label><input id="editar-valor-deuda" type="number" min="1" max="1000000000000" step="1" inputmode="numeric" required>
+    <button type="submit">Guardar cambios</button><button id="cancelar-edicion-deuda" class="boton-cancelar" type="button">Cancelar</button>
+  </form>
+</dialog>
+<dialog id="pregunta-deuda" aria-labelledby="titulo-pregunta-deuda" aria-describedby="detalle-pregunta-deuda">
+  <p class="eyebrow">MOVIMIENTO DE DINERO</p>
+  <h2 id="titulo-pregunta-deuda"></h2>
+  <p id="detalle-pregunta-deuda" class="ayuda"></p>
+  <p id="error-pregunta-deuda" class="aviso" role="alert" hidden></p>
+  <div class="respuestas-deuda">
+    <button id="deuda-si" type="button">Sí, añadir</button>
+    <button id="deuda-no" type="button" class="boton-cancelar">No, solo la deuda</button>
   </div>
-
-  <input
-    id="archivo-copia"
-    type="file"
-    accept=".json,application/json"
-    hidden
-  >
-</section>
-  </main>
+  <button id="cancelar-pregunta-deuda" type="button" class="boton-texto">Cancelar operación</button>
+</dialog>
 </body>
 </html>
