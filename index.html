@@ -32,14 +32,46 @@
       <button type="submit">Agregar movimiento</button>
     </form>
   </section>
+  <section class="panel" aria-labelledby="titulo-mensuales">
+    <h2 id="titulo-mensuales">Gastos mensuales</h2>
+    <p id="mes-mensuales" class="mes-mensuales" role="status" aria-atomic="true"></p>
+    <nav class="botones-paginacion navegacion-meses" aria-label="Mes de los gastos mensuales">
+      <button id="mes-anterior" type="button" class="boton-cancelar" aria-controls="lista-mensuales">← Mes anterior</button>
+      <button id="volver-mes-actual" type="button" class="boton-cancelar" aria-controls="lista-mensuales">Mes actual</button>
+      <button id="mes-siguiente" type="button" class="boton-cancelar" aria-controls="lista-mensuales">Mes siguiente →</button>
+    </nav>
+    <p class="ayuda">Se repiten cada mes. Al pagar, elige si quieres añadirlo como gasto al historial de transacciones.</p>
+    <p class="ayuda">Los pagos se aplican al mes seleccionado. Las transacciones se registran con la fecha de hoy.</p>
+    <div class="resumen-deudas">
+      <article><h3>Pendiente</h3><strong id="mensuales-pendiente">$0</strong></article>
+      <article><h3>Pagado en el mes</h3><strong id="mensuales-pagado">$0</strong></article>
+    </div>
+    <p id="sin-mensuales" class="ayuda">Añade tus gastos habituales, como arriendo, internet o servicios.</p>
+    <ul id="lista-mensuales"></ul>
+    <button id="abrir-mensual" type="button" aria-expanded="false" aria-controls="formulario-mensual">Añadir gasto mensual</button>
+    <form id="formulario-mensual" class="desplegable-deudas" hidden>
+      <h3 id="titulo-formulario-mensual">Nuevo gasto mensual</h3>
+      <label for="descripcion-mensual">Descripción</label><input id="descripcion-mensual" type="text" maxlength="100" placeholder="Ejemplo: Internet" required>
+      <label for="valor-mensual">Valor en pesos</label><input id="valor-mensual" type="number" min="1" max="1000000000000" step="1" inputmode="numeric" required>
+      <label for="dia-mensual">Día de vencimiento (1 a 31)</label><input id="dia-mensual" type="number" min="1" max="31" step="1" inputmode="numeric" aria-describedby="ayuda-dia-mensual" required>
+      <p id="ayuda-dia-mensual" class="ayuda">Si el mes tiene menos días, vence el último día del mes. Los cambios no modifican pagos anteriores.</p>
+      <button type="submit">Guardar gasto mensual</button>
+      <button id="cancelar-mensual" type="button" class="boton-cancelar">Cancelar</button>
+    </form>
+  </section>
   <details class="panel seccion-deudas" id="seccion-deudas">
     <summary><span>Deudas</span><span class="flecha-deudas" aria-hidden="true">⌄</span></summary>
     <div class="contenido-deudas">
-    <p class="ayuda">Registra un préstamo y elige si quieres añadir su movimiento de dinero.</p>
     <div class="resumen-deudas">
       <article><h3>Por cobrar</h3><strong id="total-me-deben">$0</strong></article>
       <article><h3>Yo debo</h3><strong id="total-yo-debo">$0</strong></article>
     </div>
+    <h3 class="subtitulo">Deudas activas</h3>
+    <p id="sin-deudas" class="ayuda">No tienes deudas activas.</p>
+    <ul id="lista-deudas"></ul>
+    <button id="alternar-nueva-deuda" type="button" aria-expanded="false" aria-controls="nueva-deuda">Añadir</button>
+    <div id="nueva-deuda" class="desplegable-deudas" hidden>
+    <p class="ayuda">Registra un préstamo y elige si quieres añadir su movimiento de dinero.</p>
     <form id="formulario-deuda">
       <fieldset class="selector-tipo"><legend>Tipo</legend>
         <label><input type="radio" name="sentido" value="me_deben" checked><span>Prestar</span></label>
@@ -50,7 +82,26 @@
       <label for="valor-deuda">Valor pendiente en pesos</label><input id="valor-deuda" type="number" min="1" max="1000000000000" step="1" inputmode="numeric" placeholder="Ejemplo: 50000" required>
       <button type="submit">Agregar deuda</button>
     </form>
-    <h3 class="subtitulo">Mis deudas</h3><p id="sin-deudas" class="ayuda">Todavía no has registrado deudas.</p><ul id="lista-deudas"></ul>
+    </div>
+    <details id="historial-deudas" class="desplegable-deudas">
+      <summary id="alternar-historial-deudas"><span>Historial de deudas</span><span class="flecha-deudas" aria-hidden="true">⌄</span></summary>
+      <p class="ayuda">Las deudas saldadas se conservan aquí y no cuentan en los totales pendientes.</p>
+      <div class="controles-historial">
+        <label for="cantidad-deudas-saldadas">Deudas por página</label>
+        <select id="cantidad-deudas-saldadas" aria-controls="lista-deudas-saldadas">
+          <option value="10">10</option><option value="25">25</option><option value="50">50</option>
+        </select>
+      </div>
+      <p id="sin-historial-deudas" class="ayuda">Todavía no tienes deudas saldadas.</p>
+      <ul id="lista-deudas-saldadas"></ul>
+      <nav id="paginacion-deudas" class="paginacion-movimientos" aria-label="Páginas del historial de deudas" hidden>
+        <p id="estado-pagina-deudas" class="ayuda" role="status" aria-atomic="true"></p>
+        <div class="botones-paginacion">
+          <button id="pagina-deudas-anterior" type="button" class="boton-cancelar" aria-controls="lista-deudas-saldadas">Anterior</button>
+          <button id="pagina-deudas-siguiente" type="button" class="boton-cancelar" aria-controls="lista-deudas-saldadas">Siguiente</button>
+        </div>
+      </nav>
+    </details>
     </div>
   </details>
   <section class="panel">
@@ -115,6 +166,17 @@
     <button id="deuda-no" type="button" class="boton-cancelar">No, solo la deuda</button>
   </div>
   <button id="cancelar-pregunta-deuda" type="button" class="boton-texto">Cancelar operación</button>
+</dialog>
+<dialog id="pregunta-mensual" aria-labelledby="titulo-pregunta-mensual" aria-describedby="detalle-pregunta-mensual">
+  <p class="eyebrow">PAGO MENSUAL</p>
+  <h2 id="titulo-pregunta-mensual">¿Añadir este pago como gasto?</h2>
+  <p id="detalle-pregunta-mensual" class="ayuda"></p>
+  <p id="error-pregunta-mensual" class="aviso" role="alert" hidden></p>
+  <div class="respuestas-deuda">
+    <button id="mensual-si" type="button">Sí, añadir gasto</button>
+    <button id="mensual-no" type="button" class="boton-cancelar">No, solo marcar pagado</button>
+  </div>
+  <button id="cancelar-pregunta-mensual" type="button" class="boton-texto">Cancelar</button>
 </dialog>
 </body>
 </html>

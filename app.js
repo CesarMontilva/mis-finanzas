@@ -32,6 +32,13 @@ let deudaEnEdicion = null;
 let operacionDeudaPendiente = null;
 let paginaMovimientos = 1;
 let movimientosPorPagina = 10;
+let paginaDeudas = 1;
+let deudasPorPagina = 10;
+let mensualEnEdicion = null;
+let pagoMensualPendiente = null;
+let fechaMensualMostrada = "";
+// null sigue el mes actual; un mes elegido se mantiene al navegar o guardar.
+let mesMensualSeleccionado = null;
 
 function avisar(texto) {
   $("aviso").textContent = texto;
@@ -74,20 +81,41 @@ function validarEstado(datos) {
     return { sentido: d.sentido, persona: d.persona, concepto: d.concepto,
       valor: d.valor, saldada: d.saldada };
   });
-  return { movimientos, deudas };
+  const recurrentes = datos.gastosMensuales === undefined ? [] : datos.gastosMensuales;
+  if (!Array.isArray(recurrentes) || recurrentes.length > 5000) {
+    throw new Error("La lista de gastos mensuales no es válida.");
+  }
+  const gastosMensuales = recurrentes.map((g) => {
+    if (!g || !textoValido(g.descripcion, 100) || !valorValido(g.valor) ||
+        !Number.isInteger(g.dia) || g.dia < 1 || g.dia > 31 ||
+        !Array.isArray(g.pagos) || g.pagos.length > 1200) {
+      throw new Error("Hay un gasto mensual con datos incorrectos.");
+    }
+    const meses = new Set();
+    const pagos = g.pagos.map((p) => {
+      if (!p || !fechaValida(p.fecha) || typeof p.mes !== "string" || !fechaValida(`${p.mes}-01`) ||
+          !valorValido(p.valor) || meses.has(p.mes)) {
+        throw new Error("Hay un pago mensual con datos incorrectos o repetidos.");
+      }
+      meses.add(p.mes);
+      return { mes: p.mes, fecha: p.fecha, valor: p.valor };
+    });
+    return { descripcion: g.descripcion, valor: g.valor, dia: g.dia, pagos };
+  });
+  return { movimientos, deudas, gastosMensuales };
 }
 
 function cargarEstado() {
   try {
     const texto = localStorage.getItem(CLAVE_DATOS);
     datosLeidos = texto;
-    return texto === null ? { movimientos: [], deudas: [] } : validarEstado(JSON.parse(texto));
+    return texto === null ? { movimientos: [], deudas: [], gastosMensuales: [] } : validarEstado(JSON.parse(texto));
   } catch (error) {
     lecturaBloqueada = true;
     avisar("No se pudieron leer los datos. Para protegerlos, el guardado está bloqueado. " +
       "Conserva una copia y revisa el problema antes de continuar.");
     console.error(error);
-    return { movimientos: [], deudas: [] };
+    return { movimientos: [], deudas: [], gastosMensuales: [] };
   }
 }
 
@@ -132,7 +160,7 @@ function cerrarSelecciones() {
     fila.querySelector(".acciones-movimiento").hidden = true;
     fila.querySelector(".contenido-movimiento").setAttribute("aria-expanded", "false");
   });
-  $("lista-deudas").querySelectorAll(".deuda").forEach((fila) => {
+  $("seccion-deudas").querySelectorAll(".deuda").forEach((fila) => {
     fila.classList.remove("seleccionado");
     fila.querySelector(".acciones-deuda").hidden = true;
     fila.querySelector(".contenido-deuda").setAttribute("aria-expanded", "false");
@@ -209,6 +237,7 @@ function renderizar() {
   $("pagina-anterior").disabled = paginaMovimientos === 1;
   $("pagina-siguiente").disabled = paginaMovimientos === paginas;
   renderizarDeudas();
+  renderizarMensuales();
 }
 
 $("cantidad-movimientos").addEventListener("change", (evento) => {
@@ -325,7 +354,7 @@ function resolverOperacionDeuda(incluirMovimiento) {
     movimientos = [...movimientos, { tipo, descripcion: descripcion.slice(0, 100),
       valor: deuda.valor, fecha: fechaActual() }];
   }
-  if (!guardarEstado({ movimientos, deudas })) {
+  if (!guardarEstado({ ...estado, movimientos, deudas })) {
     $("error-pregunta-deuda").textContent = $("aviso").textContent;
     $("error-pregunta-deuda").hidden = false;
     return;
@@ -335,9 +364,11 @@ function resolverOperacionDeuda(incluirMovimiento) {
   $("pregunta-deuda").close();
   if (accion === "crear") {
     $("formulario-deuda").reset();
-    $("persona-deuda").focus();
+    cambiarFormularioDeuda(false);
+    $("alternar-nueva-deuda").focus();
   } else {
-    $("lista-deudas").querySelectorAll(".contenido-deuda")[indice]?.focus();
+    avisar("Deuda saldada. Puedes consultarla en el historial de deudas.");
+    $("alternar-historial-deudas").focus();
   }
 }
 
@@ -365,6 +396,19 @@ function abrirEditorDeuda(indice) {
   $("editar-persona-deuda").focus();
 }
 $("cancelar-edicion-deuda").addEventListener("click", () => $("editor-deuda").close());
+function cambiarFormularioDeuda(abierto) {
+  $("nueva-deuda").hidden = !abierto;
+  $("alternar-nueva-deuda").setAttribute("aria-expanded", String(abierto));
+  $("alternar-nueva-deuda").textContent = abierto ? "Ocultar formulario" : "Añadir";
+}
+$("alternar-nueva-deuda").addEventListener("click", () => {
+  const abrir = $("nueva-deuda").hidden;
+  cambiarFormularioDeuda(abrir);
+  if (abrir) $("persona-deuda").focus();
+});
+$("historial-deudas").addEventListener("toggle", () => {
+  if (!$("historial-deudas").open) cerrarSelecciones();
+});
 $("seccion-deudas").addEventListener("toggle", () => {
   if (!$("seccion-deudas").open) cerrarSelecciones();
 });
@@ -378,25 +422,55 @@ $("formulario-editar-deuda").addEventListener("submit", (evento) => {
     concepto: $("editar-concepto-deuda").value.trim(),
     valor: Number($("editar-valor-deuda").value) };
   const deudas = estado.deudas.map((d, i) => i === deudaEnEdicion ? deuda : d);
+  const indiceEditado = deudaEnEdicion;
   if (guardarEstado({ ...estado, deudas })) {
     $("editor-deuda").close();
-    $("lista-deudas").querySelectorAll(".contenido-deuda")[deudaEnEdicion]?.focus();
+    $(`deuda-${indiceEditado}`)?.focus();
   } else {
     $("error-editar-deuda").textContent = $("aviso").textContent;
     $("error-editar-deuda").hidden = false;
   }
 });
 
+$("cantidad-deudas-saldadas").addEventListener("change", (evento) => {
+  const cantidad = Number(evento.target.value);
+  if (![10, 25, 50].includes(cantidad)) return;
+  deudasPorPagina = cantidad;
+  paginaDeudas = 1;
+  renderizarDeudas();
+});
+$("pagina-deudas-anterior").addEventListener("click", () => {
+  if (paginaDeudas <= 1) return;
+  paginaDeudas--;
+  renderizarDeudas();
+});
+$("pagina-deudas-siguiente").addEventListener("click", () => {
+  const total = estado.deudas.filter((d) => d.saldada).length;
+  if (paginaDeudas * deudasPorPagina >= total) return;
+  paginaDeudas++;
+  renderizarDeudas();
+});
+
 function renderizarDeudas() {
   let meDeben = 0, yoDebo = 0;
+  const total = estado.deudas.filter((d) => d.saldada).length;
+  const paginas = Math.max(1, Math.ceil(total / deudasPorPagina));
+  paginaDeudas = Math.min(Math.max(1, paginaDeudas), paginas);
+  const inicio = (paginaDeudas - 1) * deudasPorPagina;
+  const fin = Math.min(inicio + deudasPorPagina, total);
+  let posicionSaldada = 0;
   $("lista-deudas").replaceChildren();
+  $("lista-deudas-saldadas").replaceChildren();
   estado.deudas.forEach((d, indice) => {
     if (!d.saldada) {
       if (d.sentido === "me_deben") meDeben += d.valor;
       else yoDebo += d.valor;
+    } else {
+      const posicion = posicionSaldada++;
+      if (posicion < inicio || posicion >= fin) return;
     }
     const fila = document.createElement("li");
-    fila.className = "deuda";
+    fila.className = d.saldada ? "deuda deuda-saldada" : "deuda";
     const contenido = crearBoton("", "contenido-deuda", () => {
       const abrir = acciones.hidden;
       cerrarSelecciones();
@@ -408,6 +482,7 @@ function renderizarDeudas() {
       }
     });
     contenido.setAttribute("aria-expanded", "false");
+    contenido.id = `deuda-${indice}`;
     const cabecera = document.createElement("span");
     cabecera.className = "cabecera-deuda";
     const persona = document.createElement("strong");
@@ -445,12 +520,206 @@ function renderizarDeudas() {
     });
     contenido.append(cabecera, detalle, etiqueta);
     fila.append(contenido, acciones);
-    $("lista-deudas").append(fila);
+    $(d.saldada ? "lista-deudas-saldadas" : "lista-deudas").append(fila);
   });
   $("total-me-deben").textContent = moneda.format(meDeben);
   $("total-yo-debo").textContent = moneda.format(yoDebo);
-  $("sin-deudas").hidden = estado.deudas.length > 0;
+  $("sin-deudas").hidden = estado.deudas.some((d) => !d.saldada);
+  $("sin-historial-deudas").hidden = estado.deudas.some((d) => d.saldada);
+  $("paginacion-deudas").hidden = total === 0;
+  $("estado-pagina-deudas").textContent = total === 0 ? "" :
+    `${inicio + 1}–${fin} de ${total} · Página ${paginaDeudas} de ${paginas}`;
+  $("pagina-deudas-anterior").disabled = paginaDeudas === 1;
+  $("pagina-deudas-siguiente").disabled = paginaDeudas === paginas;
 }
+
+function vencimientoMensual(mes, dia) {
+  const [anio, numeroMes] = mes.split("-").map(Number);
+  const ultimoDia = new Date(Date.UTC(anio, numeroMes, 0)).getUTCDate();
+  return `${mes}-${String(Math.min(dia, ultimoDia)).padStart(2, "0")}`;
+}
+
+function desplazarMesMensual(desplazamiento) {
+  const mes = mesMensualSeleccionado || fechaActual().slice(0, 7);
+  const fecha = new Date(`${mes}-01T00:00:00Z`);
+  fecha.setUTCMonth(fecha.getUTCMonth() + desplazamiento);
+  const anio = fecha.getUTCFullYear();
+  if (anio < 100 || anio > 9999) return;
+  mesMensualSeleccionado = fecha.toISOString().slice(0, 7);
+  renderizarMensuales();
+}
+$("mes-anterior").addEventListener("click", () => desplazarMesMensual(-1));
+$("mes-siguiente").addEventListener("click", () => desplazarMesMensual(1));
+$("volver-mes-actual").addEventListener("click", () => {
+  mesMensualSeleccionado = null;
+  renderizarMensuales();
+});
+
+function renderizarMensuales() {
+  const hoy = fechaActual();
+  const mes = mesMensualSeleccionado || hoy.slice(0, 7);
+  fechaMensualMostrada = hoy;
+  $("mes-mensuales").textContent = new Intl.DateTimeFormat("es-CO", {
+    month: "long", year: "numeric", timeZone: "UTC"
+  }).format(new Date(`${mes}-01T00:00:00Z`));
+  let pendiente = 0, pagado = 0;
+  $("lista-mensuales").replaceChildren();
+  estado.gastosMensuales.forEach((g, indice) => {
+    const pago = g.pagos.find((p) => p.mes === mes);
+    const vencimiento = vencimientoMensual(mes, g.dia);
+    if (pago) pagado += pago.valor;
+    else pendiente += g.valor;
+    const fila = document.createElement("li");
+    fila.className = `gasto-mensual${pago ? " mensual-pagado" : ""}`;
+    const cabecera = document.createElement("div");
+    cabecera.className = "cabecera-deuda";
+    const descripcion = document.createElement("strong");
+    descripcion.textContent = g.descripcion;
+    const importe = document.createElement("strong");
+    importe.textContent = moneda.format(pago ? pago.valor : g.valor);
+    cabecera.append(descripcion, importe);
+    const detalle = document.createElement("p");
+    detalle.className = "detalle-deuda";
+    detalle.textContent = pago
+      ? `Pagado el ${formatoFecha.format(new Date(`${pago.fecha}T00:00:00Z`))}`
+      : `Vence el ${formatoFecha.format(new Date(`${vencimiento}T00:00:00Z`))}`;
+    const etiqueta = document.createElement("span");
+    etiqueta.className = "etiqueta";
+    etiqueta.textContent = pago ? "Pagado" : vencimiento < hoy ? "Vencido" : vencimiento === hoy ? "Vence hoy" : "Pendiente";
+    if (!pago && vencimiento <= hoy) etiqueta.classList.add("mensual-vencido");
+    const acciones = document.createElement("div");
+    acciones.className = "acciones-movimiento";
+    if (!pago) {
+      acciones.append(crearBoton("Pagar", "", () => preguntarPagoMensual(indice)));
+    }
+    acciones.append(
+      crearBoton("Editar", "boton-cancelar", () => abrirFormularioMensual(indice)),
+      crearBoton("Eliminar", "boton-eliminar", () => {
+        if (!window.confirm(`¿Eliminar «${g.descripcion}» de tus gastos recurrentes? Sus transacciones ya registradas se conservarán.`)) return;
+        if (guardarEstado({ ...estado, gastosMensuales: estado.gastosMensuales.filter((_, i) => i !== indice) })) {
+          cerrarFormularioMensual();
+          $("abrir-mensual").focus();
+        }
+      })
+    );
+    fila.append(cabecera, detalle, etiqueta, acciones);
+    $("lista-mensuales").append(fila);
+  });
+  $("mensuales-pendiente").textContent = moneda.format(pendiente);
+  $("mensuales-pagado").textContent = moneda.format(pagado);
+  $("sin-mensuales").hidden = estado.gastosMensuales.length > 0;
+}
+
+function preguntarPagoMensual(indice) {
+  if (pagoMensualPendiente) return;
+  const gasto = estado.gastosMensuales[indice];
+  const mes = mesMensualSeleccionado || fechaActual().slice(0, 7);
+  if (!gasto || gasto.pagos.some((p) => p.mes === mes)) return;
+  if (lecturaBloqueada) { avisar("Resuelve el error de lectura antes de registrar pagos."); return; }
+  pagoMensualPendiente = { indice, mes };
+  const nombreMes = new Intl.DateTimeFormat("es-CO", {
+    month: "long", year: "numeric", timeZone: "UTC"
+  }).format(new Date(`${mes}-01T00:00:00Z`));
+  $("detalle-pregunta-mensual").textContent = `${gasto.descripcion} · ${moneda.format(gasto.valor)} · ${nombreMes}. Si eliges No, quedará pagado sin añadir una transacción.`;
+  $("error-pregunta-mensual").hidden = true;
+  $("pregunta-mensual").showModal();
+  $("mensual-si").focus();
+}
+
+function resolverPagoMensual(incluirMovimiento) {
+  if (!pagoMensualPendiente) return;
+  const { indice, mes } = pagoMensualPendiente;
+  if (pagarMensual(indice, incluirMovimiento, mes)) {
+    pagoMensualPendiente = null;
+    $("pregunta-mensual").close();
+    $("abrir-mensual").focus();
+  } else {
+    $("error-pregunta-mensual").textContent = $("aviso").textContent || "No se pudo registrar este pago. Cierra la ventana y revisa el gasto.";
+    $("error-pregunta-mensual").hidden = false;
+  }
+}
+$("mensual-si").addEventListener("click", () => resolverPagoMensual(true));
+$("mensual-no").addEventListener("click", () => resolverPagoMensual(false));
+$("cancelar-pregunta-mensual").addEventListener("click", () => {
+  pagoMensualPendiente = null;
+  $("pregunta-mensual").close();
+});
+$("pregunta-mensual").addEventListener("cancel", () => { pagoMensualPendiente = null; });
+$("pregunta-mensual").addEventListener("close", () => {
+  if (!$("pregunta-mensual").open) pagoMensualPendiente = null;
+});
+
+function pagarMensual(indice, incluirMovimiento, mesConfirmado = null) {
+  const fecha = fechaActual();
+  const mes = mesConfirmado || mesMensualSeleccionado || fecha.slice(0, 7);
+  if (!mesConfirmado && mesMensualSeleccionado === null && fechaMensualMostrada.slice(0, 7) !== mes) {
+    renderizarMensuales();
+    avisar("Ha comenzado un nuevo mes. Revisa la lista y vuelve a seleccionar el pago.");
+    return;
+  }
+  const gasto = estado.gastosMensuales[indice];
+  if (!gasto || gasto.pagos.some((p) => p.mes === mes)) return;
+  const gastosMensuales = estado.gastosMensuales.map((g, i) => i === indice
+    ? { ...g, pagos: [...g.pagos, { mes, fecha, valor: g.valor }] } : g);
+  const movimientos = incluirMovimiento ? [...estado.movimientos, {
+    tipo: "gasto", descripcion: `${gasto.descripcion.slice(0, 90)} · ${mes}`, valor: gasto.valor, fecha
+  }] : estado.movimientos;
+  if (guardarEstado({ ...estado, movimientos, gastosMensuales })) {
+    avisar(incluirMovimiento ? "Pago registrado en el historial de transacciones." : "Marcado como pagado sin añadir otra transacción.");
+    return true;
+  }
+  return false;
+}
+
+function abrirFormularioMensual(indice = null) {
+  mensualEnEdicion = indice;
+  const gasto = indice === null ? null : estado.gastosMensuales[indice];
+  $("formulario-mensual").reset();
+  $("titulo-formulario-mensual").textContent = gasto ? "Editar gasto mensual" : "Nuevo gasto mensual";
+  if (gasto) {
+    $("descripcion-mensual").value = gasto.descripcion;
+    $("valor-mensual").value = gasto.valor;
+    $("dia-mensual").value = gasto.dia;
+  }
+  $("formulario-mensual").hidden = false;
+  $("abrir-mensual").setAttribute("aria-expanded", "true");
+  $("descripcion-mensual").focus();
+}
+
+function cerrarFormularioMensual() {
+  mensualEnEdicion = null;
+  $("formulario-mensual").hidden = true;
+  $("abrir-mensual").setAttribute("aria-expanded", "false");
+}
+$("abrir-mensual").addEventListener("click", () => abrirFormularioMensual());
+$("cancelar-mensual").addEventListener("click", () => {
+  cerrarFormularioMensual();
+  $("abrir-mensual").focus();
+});
+$("formulario-mensual").addEventListener("submit", (evento) => {
+  evento.preventDefault();
+  if (mensualEnEdicion !== null && !estado.gastosMensuales[mensualEnEdicion]) return;
+  const gasto = {
+    descripcion: $("descripcion-mensual").value.trim(),
+    valor: Number($("valor-mensual").value), dia: Number($("dia-mensual").value),
+    pagos: mensualEnEdicion === null ? [] : estado.gastosMensuales[mensualEnEdicion].pagos
+  };
+  const gastosMensuales = mensualEnEdicion === null ? [...estado.gastosMensuales, gasto]
+    : estado.gastosMensuales.map((g, i) => i === mensualEnEdicion ? gasto : g);
+  if (guardarEstado({ ...estado, gastosMensuales })) {
+    cerrarFormularioMensual();
+    $("abrir-mensual").focus();
+  }
+});
+
+// Cambiar de mes no escribe ni duplica gastos: se consulta el pago de cada mes.
+function actualizarMesVisible() {
+  if (fechaActual() !== fechaMensualMostrada) renderizarMensuales();
+}
+document.addEventListener("visibilitychange", () => {
+  if (!document.hidden) actualizarMesVisible();
+});
+setInterval(actualizarMesVisible, 60000);
 
 function cambiarMenuCopia(abierto) {
   $("opciones-copia").hidden = !abierto;
@@ -469,7 +738,7 @@ document.addEventListener("keydown", (evento) => {
 $("exportar").addEventListener("click", () => {
   cambiarMenuCopia(false);
   if (lecturaBloqueada) { avisar("Revisa el error de lectura antes de generar una copia."); return; }
-  const copia = { version: 2, fechaDeCopia: new Date().toISOString(), ...estado };
+  const copia = { version: 3, fechaDeCopia: new Date().toISOString(), ...estado };
   const archivo = new Blob([JSON.stringify(copia, null, 2)], { type: "application/json" });
   const direccion = URL.createObjectURL(archivo);
   const enlace = document.createElement("a");
@@ -487,14 +756,21 @@ $("archivo-copia").addEventListener("change", async (evento) => {
   try {
     if (archivo.size > 10000000) throw new Error("La copia supera los 10 MB.");
     const copia = JSON.parse(await archivo.text());
-    if (!copia || ![1, 2].includes(copia.version)) throw new Error("Copia no compatible.");
+    if (!copia || ![1, 2, 3].includes(copia.version)) throw new Error("Copia no compatible.");
+    if (copia.version === 3 && !Array.isArray(copia.gastosMensuales)) throw new Error("Faltan los gastos mensuales de la copia.");
     const siguiente = validarEstado({ movimientos: copia.movimientos,
-      deudas: copia.version === 1 ? estado.deudas : copia.deudas });
+      deudas: copia.version === 1 ? estado.deudas : copia.deudas,
+      gastosMensuales: copia.version === 3 ? copia.gastosMensuales : estado.gastosMensuales });
     const mensaje = copia.version === 1
-      ? "Esta copia antigua reemplazará los movimientos y conservará las deudas actuales. ¿Continuar?"
-      : "Esta copia reemplazará todos los movimientos y deudas actuales. ¿Continuar?";
+      ? "Esta copia antigua reemplazará los movimientos y conservará las deudas y los gastos mensuales actuales. ¿Continuar?"
+      : copia.version === 2
+        ? "Esta copia reemplazará movimientos y deudas, y conservará los gastos mensuales actuales. ¿Continuar?"
+        : "Esta copia reemplazará movimientos, deudas y gastos mensuales, incluidos sus pagos. ¿Continuar?";
     if (!window.confirm(mensaje)) return;
-    if (guardarEstado(siguiente)) avisar("Copia recuperada correctamente.");
+    if (guardarEstado(siguiente)) {
+      cerrarFormularioMensual();
+      avisar("Copia recuperada correctamente.");
+    }
   } catch (error) {
     avisar("No se pudo recuperar la copia. " + error.message);
   } finally {
