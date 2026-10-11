@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Mis finanzas</title>
+  <link rel="stylesheet" href="estilos.css">
+  <script src="app.js" defer></script>
+</head>
+
+<body>
+<section class="panel">
+  <h2>Copia de seguridad</h2>
+  <p>Descarga tus movimientos o recupera una copia anterior.</p>
+
+  <button id="exportar" type="button">
+    Descargar copia
+  </button>
+
+  <button id="importar" type="button">
+    Recuperar copia
+  </button>
+
+  <input
+    id="archivo-copia"
+    type="file"
+    accept=".json,application/json"
+    hidden
+  >
+</section>
+    
+
+
+
+  <main>
+    <header>
+      <h1>Mis finanzas</h1>
+      <p>Un lugar para organizar mi dinero.</p>
+    </header>
+
+    <section class="resumen" aria-label="Resumen financiero">
+      <article>
+        <h2>Ingresos</h2>
+        <p id="total-ingresos">$0</p>
+      </article>
+
+      <article>
+        <h2>Gastos</h2>
+        <p id="total-gastos">$0</p>
+      </article>
+
+      <article>
+        <h2>Saldo</h2>
+        <p id="saldo">$0</p>
+      </article>
+    </section>
+
+    <section class="panel">
+      <h2>Nuevo movimiento</h2>
+
+      <form id="formulario">
+        <label for="tipo">Tipo de movimiento</label>
+        <select id="tipo">
+          <option value="gasto">Gasto</option>
+          <option value="ingreso">Ingreso</option>
+        </select>
+
+        <label for="descripcion">Descripción</label>
+        <input
+          id="descripcion"
+          type="text"
+          placeholder="Ejemplo: mercado o sueldo"
+          maxlength="100"
+          required
+        >
+
+        <label for="valor">Valor en pesos colombianos</label>
+        <input
+          id="valor"
+          type="number"
+          placeholder="Ejemplo: 25000"
+          min="1"
+          max="1000000000000"
+          step="1"
+          inputmode="numeric"
+          required
+        >
+
+        <button type="submit">Agregar movimiento</button>
+      </form>
+    </section>
+
+    <section class="panel">
+      <h2>Mis movimientos</h2>
+      <p id="sin-movimientos">Todavía no has registrado movimientos.</p>
+      <ul id="lista-movimientos"></ul>
+    </section>
+  </main>
+</body>
+</html>
