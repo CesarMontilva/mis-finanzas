@@ -112,17 +112,103 @@ function actualizarPantalla() {
     }
 
     const fila = document.createElement("li");
-    const descripcion = document.createElement("span");
-    const importe = document.createElement("strong");
+fila.className = "movimiento";
 
-    descripcion.textContent = movimiento.descripcion;
+const contenido = document.createElement("button");
+contenido.type = "button";
+contenido.className = "contenido-movimiento";
+contenido.setAttribute("aria-expanded", "false");
 
-    const signo = movimiento.tipo === "ingreso" ? "+" : "−";
-    importe.textContent = signo + " " + moneda.format(movimiento.valor);
-    importe.className = movimiento.tipo;
+const descripcion = document.createElement("span");
+descripcion.textContent = movimiento.descripcion;
 
-    fila.append(descripcion, importe);
-    lista.append(fila);
+const importe = document.createElement("strong");
+const signo = movimiento.tipo === "ingreso" ? "+" : "−";
+
+importe.textContent = signo + " " + moneda.format(movimiento.valor);
+importe.className = movimiento.tipo;
+
+contenido.append(descripcion, importe);
+
+const acciones = document.createElement("div");
+acciones.className = "acciones-movimiento";
+acciones.hidden = true;
+
+const editar = document.createElement("button");
+editar.type = "button";
+editar.textContent = "Editar";
+
+const eliminar = document.createElement("button");
+eliminar.type = "button";
+eliminar.textContent = "Eliminar";
+eliminar.className = "boton-eliminar";
+
+const cancelar = document.createElement("button");
+cancelar.type = "button";
+cancelar.textContent = "Cancelar";
+cancelar.className = "boton-cancelar";
+
+function cerrarAcciones() {
+  fila.classList.remove("seleccionado");
+  acciones.hidden = true;
+  contenido.setAttribute("aria-expanded", "false");
+}
+
+contenido.addEventListener("click", function () {
+  const abrir = acciones.hidden;
+
+  // Cierra cualquier otro movimiento seleccionado.
+  lista.querySelectorAll(".movimiento").forEach(function (elemento) {
+    elemento.classList.remove("seleccionado");
+    elemento.querySelector(".acciones-movimiento").hidden = true;
+    elemento.querySelector(".contenido-movimiento")
+      .setAttribute("aria-expanded", "false");
+  });
+
+  if (abrir) {
+    fila.classList.add("seleccionado");
+    acciones.hidden = false;
+    contenido.setAttribute("aria-expanded", "true");
+    editar.focus();
+  }
+});
+
+cancelar.addEventListener("click", function () {
+  cerrarAcciones();
+  contenido.focus();
+});
+
+fila.addEventListener("keydown", function (evento) {
+  if (evento.key === "Escape") {
+    cerrarAcciones();
+    contenido.focus();
+  }
+});
+
+eliminar.addEventListener("click", function () {
+    const posicion = movimientos.indexOf(movimiento);
+
+  if (posicion === -1) {
+    return;
+  }
+
+  movimientos.splice(posicion, 1);
+
+  if (!guardarMovimientos()) {
+    movimientos.splice(posicion, 0, movimiento);
+    return;
+  }
+
+  actualizarPantalla();
+});
+
+editar.addEventListener("click", function () {
+  abrirEditor(movimiento);
+});
+
+acciones.append(editar, eliminar, cancelar);
+fila.append(contenido, acciones);
+lista.append(fila);
   }
 
   document.getElementById("total-ingresos").textContent =
@@ -280,4 +366,110 @@ campoArchivo.addEventListener("change", async function () {
     // Permite volver a seleccionar el mismo archivo.
     campoArchivo.value = "";
   }
+});
+
+const botonMenuCopia = document.getElementById("abrir-menu-copia");
+const opcionesCopia = document.getElementById("opciones-copia");
+const contenedorCopia = document.querySelector(".menu-copia");
+
+function cambiarMenuCopia(abierto) {
+  opcionesCopia.hidden = !abierto;
+  botonMenuCopia.setAttribute("aria-expanded", String(abierto));
+}
+
+// Mostrar u ocultar las opciones.
+botonMenuCopia.addEventListener("click", function () {
+  cambiarMenuCopia(opcionesCopia.hidden);
+});
+
+// Cerrar al elegir una opción.
+opcionesCopia.addEventListener("click", function (evento) {
+  if (evento.target.closest("button")) {
+    cambiarMenuCopia(false);
+    botonMenuCopia.focus();
+  }
+});
+
+// Cerrar al pulsar fuera del menú.
+document.addEventListener("click", function (evento) {
+  if (!contenedorCopia.contains(evento.target)) {
+    cambiarMenuCopia(false);
+  }
+});
+
+// Cerrar con la tecla Escape.
+document.addEventListener("keydown", function (evento) {
+  if (evento.key === "Escape" && !opcionesCopia.hidden) {
+    cambiarMenuCopia(false);
+    botonMenuCopia.focus();
+  }
+});
+
+const editorMovimiento = document.getElementById("editor-movimiento");
+const formularioEditar = document.getElementById("formulario-editar");
+const editarTipo = document.getElementById("editar-tipo");
+const editarDescripcion = document.getElementById("editar-descripcion");
+const editarValor = document.getElementById("editar-valor");
+
+let movimientoEnEdicion = null;
+
+function abrirEditor(movimiento) {
+  movimientoEnEdicion = movimiento;
+
+  editarTipo.value = movimiento.tipo;
+  editarDescripcion.value = movimiento.descripcion;
+  editarValor.value = movimiento.valor;
+
+  editorMovimiento.showModal();
+  editarDescripcion.focus();
+}
+
+document.getElementById("cancelar-edicion")
+  .addEventListener("click", function () {
+    editorMovimiento.close();
+  });
+
+editorMovimiento.addEventListener("close", function () {
+  movimientoEnEdicion = null;
+});
+
+formularioEditar.addEventListener("submit", function (evento) {
+  evento.preventDefault();
+
+  const descripcion = editarDescripcion.value.trim();
+  const valor = Number(editarValor.value);
+  const posicion = movimientos.indexOf(movimientoEnEdicion);
+
+  if (posicion === -1) {
+    alert("Ese movimiento ya no está disponible.");
+    editorMovimiento.close();
+    return;
+  }
+
+  if (
+    descripcion === "" ||
+    !Number.isSafeInteger(valor) ||
+    valor <= 0 ||
+    valor > 1000000000000
+  ) {
+    alert("Escribe una descripción y un valor válido en pesos enteros.");
+    return;
+  }
+
+  const anterior = movimientos[posicion];
+
+  movimientos[posicion] = {
+    ...anterior,
+    tipo: editarTipo.value,
+    descripcion: descripcion,
+    valor: valor
+  };
+
+  if (!guardarMovimientos()) {
+    movimientos[posicion] = anterior;
+    return;
+  }
+
+  editorMovimiento.close();
+  actualizarPantalla();
 });

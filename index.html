@@ -8,30 +8,44 @@
   <script src="app.js" defer></script>
 </head>
 
+<dialog id="editor-movimiento" aria-labelledby="titulo-editor">
+  <h2 id="titulo-editor">Editar movimiento</h2>
+
+  <form id="formulario-editar">
+    <label for="editar-tipo">Tipo</label>
+    <select id="editar-tipo">
+      <option value="gasto">Gasto</option>
+      <option value="ingreso">Ingreso</option>
+    </select>
+
+    <label for="editar-descripcion">Descripción</label>
+    <input
+      id="editar-descripcion"
+      type="text"
+      maxlength="100"
+      required
+    >
+
+    <label for="editar-valor">Valor en pesos colombianos</label>
+    <input
+      id="editar-valor"
+      type="number"
+      min="1"
+      max="1000000000000"
+      step="1"
+      inputmode="numeric"
+      required
+    >
+
+    <button type="submit">Guardar cambios</button>
+
+    <button id="cancelar-edicion" class="boton-cancelar" type="button">
+      Cancelar
+    </button>
+  </form>
+</dialog>
+
 <body>
-<section class="panel">
-  <h2>Copia de seguridad</h2>
-  <p>Descarga tus movimientos o recupera una copia anterior.</p>
-
-  <button id="exportar" type="button">
-    Descargar copia
-  </button>
-
-  <button id="importar" type="button">
-    Recuperar copia
-  </button>
-
-  <input
-    id="archivo-copia"
-    type="file"
-    accept=".json,application/json"
-    hidden
-  >
-</section>
-    
-
-
-
   <main>
     <header>
       <h1>Mis finanzas</h1>
@@ -95,6 +109,35 @@
       <p id="sin-movimientos">Todavía no has registrado movimientos.</p>
       <ul id="lista-movimientos"></ul>
     </section>
+    <section class="menu-copia">
+  <button
+    id="abrir-menu-copia"
+    type="button"
+    aria-label="Opciones de copia de seguridad"
+    aria-expanded="false"
+    aria-controls="opciones-copia"
+    title="Copia de seguridad"
+  >
+    <span aria-hidden="true">💾</span>
+  </button>
+
+  <div id="opciones-copia" class="opciones-copia" hidden>
+    <button id="exportar" type="button">
+      Guardar copia
+    </button>
+
+    <button id="importar" type="button">
+      Restaurar copia
+    </button>
+  </div>
+
+  <input
+    id="archivo-copia"
+    type="file"
+    accept=".json,application/json"
+    hidden
+  >
+</section>
   </main>
 </body>
 </html>
